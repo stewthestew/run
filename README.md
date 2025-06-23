@@ -40,3 +40,10 @@ RUN echo "Current directory contents:"
 RUN ls -la
 RUN echo "Docker test complete!"
 ```
+
+## Installation
+```bash
+git clone https://github.com/stewthestew/runit.git
+cd runit
+cargo install --path .
+```
