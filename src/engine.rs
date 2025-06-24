@@ -156,7 +156,7 @@ pub fn docker(content: &[String]) -> Result<(), io::Error> {
 
 pub fn launch(first: &str, buffer: &[String], name: &str) -> miette::Result<()> {
     match first {
-        "#!shell" => {
+        "#!shell" | "#!sh" | "#!bash" | "#!bsh" => {
             let sh = env::var("SHELL").unwrap_or_else(|_| {
                 println!("No shell found, trying to use '/usr/bin/sh' instead");
                 "/usr/bin/sh".to_string()
@@ -166,7 +166,7 @@ pub fn launch(first: &str, buffer: &[String], name: &str) -> miette::Result<()> 
                 exit(1);
             };
         }
-        "#!docker" => {
+        "#!docker" | "#!container" => {
             // I will take the lines after #!docker and put them in a new .Dockerfile
             if let Err(e) = docker(buffer) {
                 eprintln!("Error running docker ERROR({e})");
@@ -183,7 +183,7 @@ pub fn launch(first: &str, buffer: &[String], name: &str) -> miette::Result<()> 
                 exit(1);
             }
         }
-        "#!ruby" => {
+        "#!ruby" | "#!rb" => {
             // Python is really REALLY similar to shell execution wise so I can just modify
             // the shell function
             // I will assume the user has ruby installed
