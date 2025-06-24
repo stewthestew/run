@@ -15,23 +15,27 @@ struct Args {
     #[arg(short, long, default_value_t = String::from(".runit"))]
     file: String,
 
-    #[arg(short, long, default_value_t = String::from(".runits"))]
+    #[arg(short, long, default_value_t = String::new())]
     runits: String,
 }
 
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    // start(&args)?;
-    start_runits(&args)?;
+    let mut buffer: Vec<String> = Vec::new();
+    start(&args, &mut buffer)?;
+    // FIXME I think runits already clears the buffer, but just incase.
+    if !args.runits.is_empty() {
+        buffer.clear();
+        runits(&args, &mut buffer)?;
+    }
     Ok(())
 }
 
-// FIXME For now we will split runits and runit
+// FIXME For now we will split runits and runit (You probably don't want this)
 
 // Start runit
-fn start(args: &Args) -> miette::Result<()> {
-    let mut buffer: Vec<String> = Vec::new();
+fn start(args: &Args, buffer: &mut Vec<String>) -> miette::Result<()> {
     let file = match File::open(&args.file) {
         Ok(f) => f,
         Err(e) => {
@@ -77,15 +81,14 @@ fn start(args: &Args) -> miette::Result<()> {
     }
 
     if !args.file.is_empty() {
-        engine::launch(first, &buffer, &args.file)?;
+        engine::launch(first, buffer, &args.file)?;
     }
 
     Ok(())
 }
 
-fn start_runits(args: &Args) -> miette::Result<()> {
-    let mut buffer: Vec<String> = Vec::new();
-    let files = match engine::runits(&args.runits) {
+fn runits(args: &Args, buffer: &mut Vec<String>) -> miette::Result<()> {
+    let files = match engine::get_directories(&args.runits) {
         Ok(f) => f,
         Err(e) => {
             eprintln!("Error reading {} file ERROR({e})", args.runits);
@@ -140,8 +143,8 @@ fn start_runits(args: &Args) -> miette::Result<()> {
             })?;
         }
 
-        if !args.file.is_empty() {
-            engine::launch(first, &buffer, &f)?;
+        if !f.is_empty() {
+            engine::launch(first, buffer, &f)?;
         }
     }
 

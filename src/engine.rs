@@ -198,7 +198,7 @@ pub fn launch(first: &str, buffer: &[String], name: &str) -> miette::Result<()> 
 
 // Run the runits
 #[allow(dead_code)]
-pub fn runits(root: &str) -> Result<Vec<String>, io::Error> {
+pub fn get_directories(root: &str) -> Result<Vec<String>, io::Error> {
     let mut dirs: Vec<String> = Vec::new();
     for entry in walkdir::WalkDir::new(root) {
         let entry = entry?;
