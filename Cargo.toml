@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 console_stuff = "0.2.1"
 libc = "0.2.174"
+walkdir = "2.5.0"

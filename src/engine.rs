@@ -9,6 +9,31 @@ fn isroot() -> bool {
     unsafe { libc::geteuid() == 0 }
 }
 
+/// Looks at the first character of each string and checks if it is a digit, then it sorts it from
+/// 0 to u32 maximum digit
+fn sort(strings: &mut Vec<String>) {
+    strings.retain(|s| {
+        if !s.is_empty() && s.chars().next().unwrap().is_ascii_digit() {
+            true
+        } else {
+            eprintln!("Ignoring: '{}'", s);
+            false
+        }
+    });
+
+    strings.sort_by_key(|s| {
+        let mut end = 0;
+        for (i, c) in s.char_indices() {
+            if c.is_ascii_digit() {
+                end = i + 1;
+            } else {
+                break;
+            }
+        }
+        s[..end].parse::<u32>().unwrap_or(u32::MAX)
+    });
+}
+
 pub fn shell(content: &[String], shell: &str) -> Result<(), io::Error> {
     let script = content.join("\n");
     let temp = format!(
@@ -96,4 +121,18 @@ pub fn launch(first: &str, buffer: &[String]) {
             eprintln!("Unknown identifier.\nExpected:[#!shell, #!docker, #!python]\nFound:{first}");
         }
     }
+}
+
+// Run the runits
+pub fn runits(root: &str) -> Result<Vec<String>, io::Error> {
+    let mut dirs: Vec<String> = Vec::new();
+    for entry in walkdir::WalkDir::new(root) {
+        let entry = entry?;
+        dirs.push(entry.file_name().to_string_lossy().to_string());
+    }
+
+    // NOTE this is a workaround because the index 0 will always be the root directory name
+    dirs.remove(0);
+    sort(&mut dirs);
+    Ok(dirs)
 }
