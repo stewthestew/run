@@ -5,6 +5,10 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+use std::sync::OnceLock;
+
+static SHELL: OnceLock<String> = OnceLock::new();
+
 const SUPPORTED_LANGUAGES: [&str; 4] = ["#!shell", "#!docker", "#!python", "#!ruby"];
 const DEFAULT_MESSAGE: &str = "Expected one of the following:";
 
@@ -57,7 +61,7 @@ impl LanguageError {
             })?,
             "#!cmake" => Err(LanguageError {
                 src: NamedSource::new(name, first.to_string()),
-                help: format!("Expected one of the following: #! + {SUPPORTED_LANGUAGES:?}"),
+                help: format!("{DEFAULT_MESSAGE} {SUPPORTED_LANGUAGES:?}"),
                 label: "cmake is not supported".to_string(),
                 bad_bit: (0, first.len()).into(),
             })?,
@@ -132,7 +136,6 @@ pub fn shell(content: &[String], shell: &str) -> Result<(), io::Error> {
 pub fn docker(content: &[String]) -> Result<(), io::Error> {
     if !isroot() {
         eprintln!("You must be root to run docker");
-        exit(1);
     }
     let script = content.join("\n");
     let temp = "./.Dockerfile";
@@ -157,14 +160,13 @@ pub fn docker(content: &[String]) -> Result<(), io::Error> {
 pub fn launch(first: &str, buffer: &[String], name: &str) -> miette::Result<()> {
     match first {
         "#!shell" | "#!sh" | "#!bash" | "#!bsh" => {
-            let sh = env::var("SHELL").unwrap_or_else(|_| {
-                println!("No shell found, trying to use '/usr/bin/sh' instead");
-                "/usr/bin/sh".to_string()
-            });
-            if let Err(e) = shell(buffer, &sh) {
+            // This is stupid and unnecessary but it is fun
+            let sh = SHELL.get_or_init(|| env::var("SHELL").unwrap_or("/usr/bin/sh".to_string()));
+
+            if let Err(e) = shell(buffer, sh) {
                 eprintln!("Error running shell ERROR({e})");
                 exit(1);
-            };
+            }
         }
         "#!docker" | "#!container" => {
             // I will take the lines after #!docker and put them in a new .Dockerfile
@@ -199,7 +201,7 @@ pub fn launch(first: &str, buffer: &[String], name: &str) -> miette::Result<()> 
 
 // Run the runits
 #[allow(dead_code)]
-pub fn runits(root: &str) -> Result<Vec<String>, io::Error> {
+pub fn get_directories(root: &str) -> Result<Vec<String>, io::Error> {
     let mut dirs: Vec<String> = Vec::new();
     for entry in walkdir::WalkDir::new(root) {
         let entry = entry?;
