@@ -177,7 +177,7 @@ fn runits(args: &Args, buffer: &mut Vec<String>) -> miette::Result<()> {
         }
 
         if !f.is_empty() && !args.dry_run && !args.list {
-            engine::launch(first, buffer, &args.file)?;
+            engine::launch(first, buffer, &f)?;
         } else if args.list {
             println!("{}", f);
         } else if args.dry_run {
