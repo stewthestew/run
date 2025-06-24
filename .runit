@@ -1,2 +1,6 @@
 #!shell
-echo "hello"
+cargo build
+target/debug/runit --file ./tests/1python
+target/debug/runit --file ./tests/2ruby
+target/debug/runit --file ./tests/3shell
+target/debug/runit --file ./tests/4docker

@@ -5,8 +5,83 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+const SUPPORTED_LANGUAGES: [&str; 4] = ["shell", "docker", "python", "ruby"];
+const DEFAULT_MESSAGE: &str = "Expected one of the following: #! +";
+
+use miette::{Diagnostic, NamedSource, Result, SourceSpan};
+use strsim::jaro_winkler;
+use thiserror::Error;
+
 fn isroot() -> bool {
     unsafe { libc::geteuid() == 0 }
+}
+
+#[derive(Debug, Error, Diagnostic)]
+#[error("Syntax error")]
+#[diagnostic(code(Error::Syntax))]
+pub struct LanguageError {
+    #[source_code]
+    pub src: NamedSource<String>,
+
+    #[help]
+    pub help: String,
+
+    pub label: String,
+
+    #[label("{label}")]
+    pub bad_bit: SourceSpan,
+}
+
+// #[derive(Debug, Error, Diagnostic)]
+// #[error("Syntax error")]
+// #[diagnostic(code(Error::Runtime))]
+// struct RuntimeError {}
+
+impl LanguageError {
+    fn error(first: &str, name: &str) -> miette::Result<()> {
+        match first {
+            // All languages are not supported but planned for later:
+            "#!node" | "#!bun" | "#!js" | "#!ts" | "#!javascript" | "#!typescript" => {
+                Err(LanguageError {
+                    src: NamedSource::new(name, first.to_string()),
+                    help: format!("{DEFAULT_MESSAGE} {SUPPORTED_LANGUAGES:?}"),
+                    label: "Javascript is not supported".to_string(),
+                    bad_bit: (0, first.len()).into(),
+                })?
+            }
+            "#!lua" => Err(LanguageError {
+                src: NamedSource::new(name, first.to_string()),
+                help: format!("{DEFAULT_MESSAGE} {SUPPORTED_LANGUAGES:?}"),
+                label: "Lua is not supported".to_string(),
+                bad_bit: (0, first.len()).into(),
+            })?,
+            "#!cmake" => Err(LanguageError {
+                src: NamedSource::new(name, first.to_string()),
+                help: format!("Expected one of the following: #! + {SUPPORTED_LANGUAGES:?}"),
+                label: "cmake is not supported".to_string(),
+                bad_bit: (0, first.len()).into(),
+            })?,
+            // Everything else:
+            _ => {
+                for supported in SUPPORTED_LANGUAGES {
+                    if jaro_winkler(first, supported).abs() > 0.8 {
+                        Err(LanguageError {
+                            src: NamedSource::new(name, first.to_string()),
+                            help: format!("Did you mean? {supported}"),
+                            label: "Unexpected identifier".to_string(),
+                            bad_bit: (0, first.len()).into(),
+                        })?
+                    }
+                }
+                Err(LanguageError {
+                    src: NamedSource::new(name, first.to_string()),
+                    help: format!("{DEFAULT_MESSAGE} {SUPPORTED_LANGUAGES:?}"),
+                    label: "Unexpected identifier".to_string(),
+                    bad_bit: (0, first.len()).into(),
+                })?
+            }
+        }
+    }
 }
 
 #[allow(dead_code)]
@@ -79,7 +154,7 @@ pub fn docker(content: &[String]) -> Result<(), io::Error> {
     Ok(())
 }
 
-pub fn launch(first: &str, buffer: &[String]) {
+pub fn launch(first: &str, buffer: &[String], name: &str) -> miette::Result<()> {
     match first {
         "#!shell" => {
             let sh = env::var("SHELL").unwrap_or_else(|_| {
@@ -118,10 +193,9 @@ pub fn launch(first: &str, buffer: &[String]) {
                 exit(1);
             }
         }
-        _ => {
-            eprintln!("Unknown identifier.\nExpected:[#!shell, #!docker, #!python]\nFound:{first}");
-        }
+        _ => LanguageError::error(first, name)?,
     }
+    Ok(())
 }
 
 // Run the runits
