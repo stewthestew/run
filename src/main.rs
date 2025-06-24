@@ -24,7 +24,6 @@ fn main() -> Result<()> {
 
     let mut buffer: Vec<String> = Vec::new();
     start(&args, &mut buffer)?;
-    // NOTE I think runits already clears the buffer, but just incase.
     if !args.runits.is_empty() {
         runits(&args, &mut buffer)?;
     }
