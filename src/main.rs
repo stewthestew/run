@@ -69,5 +69,6 @@ fn main() {
     }
 
     bar.set_message("Launching");
+    bar.finish();
     engine::launch(first, &buffer);
 }
