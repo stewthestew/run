@@ -1,0 +1,4 @@
+#!shell
+cargo build
+./target/debug/runit --file ./tests/shell
+./target/debug/runit --file ./tests/python
