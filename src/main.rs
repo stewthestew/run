@@ -24,15 +24,12 @@ fn main() -> Result<()> {
 
     let mut buffer: Vec<String> = Vec::new();
     start(&args, &mut buffer)?;
-    // FIXME I think runits already clears the buffer, but just incase.
+    // NOTE I think runits already clears the buffer, but just incase.
     if !args.runits.is_empty() {
-        buffer.clear();
         runits(&args, &mut buffer)?;
     }
     Ok(())
 }
-
-// FIXME For now we will split runits and runit (You probably don't want this)
 
 // Start runit
 fn start(args: &Args, buffer: &mut Vec<String>) -> miette::Result<()> {
