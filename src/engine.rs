@@ -184,8 +184,7 @@ pub fn launch(first: &str, buffer: &[String], name: &str) -> miette::Result<()> 
             }
         }
         "#!ruby" | "#!rb" => {
-            // Python is really REALLY similar to shell execution wise so I can just modify
-            // the shell function
+            // Same situation with Ruby
             // I will assume the user has ruby installed
             let sh = "ruby";
             if let Err(e) = shell(buffer, sh) {
