@@ -23,7 +23,7 @@ time.sleep(5)
 print("Done!")
 ```
 
-Now we are executing a shell script
+Now we are executing a shell script (Decided by $SHELL environment variable)
 ```runit
 #!shell
 echo "Hello world"
@@ -39,6 +39,12 @@ RUN echo "Hello from Docker!"
 RUN echo "Current directory contents:"
 RUN ls -la
 RUN echo "Docker test complete!"
+```
+
+And you can also run Ruby code too
+```runit
+#!ruby
+puts "Hello world"
 ```
 
 ## Installation
