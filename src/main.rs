@@ -104,6 +104,18 @@ fn main() {
                 exit(1);
             }
         }
+        "#!ruby" => {
+            // Python is really REALLY similar to shell execution wise so I can just modify
+            // the shell function
+            // I will assume the user has ruby installed
+            bar.set_message("Running");
+            bar.finish();
+            let shell = "ruby";
+            if let Err(e) = launch::shell(&buffer, shell) {
+                eprintln!("Error running shell ERROR({e})");
+                exit(1);
+            }
+        }
         _ => {
             eprintln!("Unknown identifier.\nExpected:[#!shell, #!docker, #!python]\nFound:{first}");
         }

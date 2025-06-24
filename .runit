@@ -2,3 +2,4 @@
 cargo build
 ./target/debug/runit --file ./tests/shell
 ./target/debug/runit --file ./tests/python
+./target/debug/runit --file ./tests/ruby
