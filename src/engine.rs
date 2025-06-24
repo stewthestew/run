@@ -5,8 +5,8 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-const SUPPORTED_LANGUAGES: [&str; 4] = ["shell", "docker", "python", "ruby"];
-const DEFAULT_MESSAGE: &str = "Expected one of the following: #! +";
+const SUPPORTED_LANGUAGES: [&str; 4] = ["#!shell", "#!docker", "#!python", "#!ruby"];
+const DEFAULT_MESSAGE: &str = "Expected one of the following:";
 
 use miette::{Diagnostic, NamedSource, Result, SourceSpan};
 use strsim::jaro_winkler;

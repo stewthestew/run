@@ -1,6 +1,8 @@
 # Runit
 Run it like no tomorrow.
 
+Runit is a dead simple project running utility.
+
 ## Usage
 First you need to create a `.runit` file in the root of your project.
 The `.runit` file is a simple text file that contains a list of commands and an identifier.
@@ -13,6 +15,7 @@ all code here
 
 The first line has to be an identifier.
 An identifier is similar to like a shebang if you want to think of it that way.
+
 ### Examples
 Here we are executing a python script
 ```runit
@@ -45,6 +48,25 @@ And you can also run Ruby code too
 ```runit
 #!ruby
 puts "Hello world"
+```
+
+## Useful errors
+
+```runit
+!rubby
+puts "Hello world"
+```
+
+```error
+Error: Error::Syntax
+
+  × Syntax error
+   ╭─[./tests/2ruby:1:1]
+ 1 │ !rubby
+   · ───┬──
+   ·    ╰── Unexpected identifier
+   ╰────
+  help: Did you mean? #!ruby
 ```
 
 ## Installation
