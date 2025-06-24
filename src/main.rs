@@ -2,8 +2,8 @@ use console_stuff::clap;
 use console_stuff::prelude::Parser;
 use miette::{NamedSource, Result};
 use std::{
-    fs::File,
-    io::{self, BufRead, BufReader},
+    fs::{self, File},
+    io::{self, BufRead, BufReader, Write},
     process::exit,
 };
 
@@ -17,10 +17,40 @@ struct Args {
 
     #[arg(short, long, default_value_t = String::from(".runits"))]
     runits: String,
+
+    #[arg(short, long, default_value_t = false)]
+    dry_run: bool,
+
+    #[arg(short, long, alias = "ls", default_value_t = false)]
+    list: bool,
+
+    #[arg(short, long, default_value_t = String::from("none"))]
+    init: String,
 }
 
 fn main() -> Result<()> {
     let args = Args::parse();
+
+    match args.init.to_lowercase().as_str() {
+        "simple" => {
+            if let Err(e) = init(Templates::Simple) {
+                eprintln!("Error creating .runit file ERROR({e})");
+                exit(1);
+            };
+            exit(0)
+        }
+        "workflow" => {
+            if let Err(e) = init(Templates::Workflow) {
+                eprintln!("Error creating .runit file ERROR({e})");
+            };
+            exit(0)
+        }
+        "none" => {}
+        _ => {
+            eprintln!("Unknown template");
+            exit(1);
+        }
+    }
 
     let mut buffer: Vec<String> = Vec::new();
     start(&args, &mut buffer)?;
@@ -76,8 +106,15 @@ fn start(args: &Args, buffer: &mut Vec<String>) -> miette::Result<()> {
         })?;
     }
 
-    if !args.file.is_empty() {
+    if !args.file.is_empty() && !args.dry_run && !args.list {
         engine::launch(first, buffer, &args.file)?;
+    } else if args.list {
+        println!("{}", args.file);
+    } else if args.dry_run {
+        println!("\n {}", args.file);
+        for (i, b) in buffer.iter().enumerate() {
+            println!("{}| {}", i + 1, b);
+        }
     }
 
     Ok(())
@@ -139,10 +176,54 @@ fn runits(args: &Args, buffer: &mut Vec<String>) -> miette::Result<()> {
             })?;
         }
 
-        if !f.is_empty() {
-            engine::launch(first, buffer, &f)?;
+        if !f.is_empty() && !args.dry_run && !args.list {
+            engine::launch(first, buffer, &args.file)?;
+        } else if args.list {
+            println!("{}", f);
+        } else if args.dry_run {
+            println!("\n {}:", f);
+            for (i, b) in buffer.iter().enumerate() {
+                println!("{}| {}", i + 1, b);
+            }
         }
     }
 
+    Ok(())
+}
+
+enum Templates {
+    Simple,
+    Workflow,
+}
+
+// Hardcoded templates for now
+// Might not do that later?
+fn init(template: Templates) -> io::Result<()> {
+    match template {
+        Templates::Simple => {
+            // Make a .runit file
+            // and apend to it the following
+            // #!shell
+            // echo "Let's run it"
+            let mut file = File::create(".runit")?;
+            file.write_all(b"#!shell\necho \"simple template\"\n")?;
+        }
+        Templates::Workflow => {
+            fs::create_dir(".runits")?;
+
+            // Create example runits files
+            let mut file1 = File::create(".runits/1_setup")?;
+            file1.write_all(b"#!shell\necho \"Setting up project...\"\n")?;
+
+            let mut file2 = File::create(".runits/2_build")?;
+            file2.write_all(b"#!python\nprint(\"Building project...\")\n")?;
+
+            let mut file3 = File::create(".runits/3_test")?;
+            file3.write_all(b"#!shell\necho \"Running tests...\"\n")?;
+
+            let mut file = File::create(".runit")?;
+            file.write_all(b"#!shell\necho \"workflow template\"\n")?;
+        }
+    }
     Ok(())
 }
