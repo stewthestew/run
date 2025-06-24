@@ -111,9 +111,9 @@ fn start(args: &Args, buffer: &mut Vec<String>) -> miette::Result<()> {
     } else if args.list {
         println!("{}", args.file);
     } else if args.dry_run {
-        println!("\n {}", args.file);
+        println!("\n ╭─{}", args.file);
         for (i, b) in buffer.iter().enumerate() {
-            println!("{}| {}", i + 1, b);
+            println!("{}│ {}", i + 1, b);
         }
     }
 
@@ -181,9 +181,9 @@ fn runits(args: &Args, buffer: &mut Vec<String>) -> miette::Result<()> {
         } else if args.list {
             println!("{}", f);
         } else if args.dry_run {
-            println!("\n {}:", f);
+            println!("\n ╭─{}", f);
             for (i, b) in buffer.iter().enumerate() {
-                println!("{}| {}", i + 1, b);
+                println!("{}│ {}", i + 1, b);
             }
         }
     }
