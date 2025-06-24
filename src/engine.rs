@@ -57,7 +57,7 @@ impl LanguageError {
             })?,
             "#!cmake" => Err(LanguageError {
                 src: NamedSource::new(name, first.to_string()),
-                help: format!("Expected one of the following: #! + {SUPPORTED_LANGUAGES:?}"),
+                help: format!("{DEFAULT_MESSAGE} {SUPPORTED_LANGUAGES:?}"),
                 label: "cmake is not supported".to_string(),
                 bad_bit: (0, first.len()).into(),
             })?,
@@ -132,7 +132,6 @@ pub fn shell(content: &[String], shell: &str) -> Result<(), io::Error> {
 pub fn docker(content: &[String]) -> Result<(), io::Error> {
     if !isroot() {
         eprintln!("You must be root to run docker");
-        exit(1);
     }
     let script = content.join("\n");
     let temp = "./.Dockerfile";
