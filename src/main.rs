@@ -15,7 +15,7 @@ struct Args {
     #[arg(short, long, default_value_t = String::from(".runit"))]
     file: String,
 
-    #[arg(short, long, default_value_t = String::new())]
+    #[arg(short, long, default_value_t = String::from(".runits"))]
     runits: String,
 }
 
@@ -24,7 +24,7 @@ fn main() -> Result<()> {
 
     let mut buffer: Vec<String> = Vec::new();
     start(&args, &mut buffer)?;
-    if !args.runits.is_empty() {
+    if args.runits.to_lowercase() != "none" {
         runits(&args, &mut buffer)?;
     }
     Ok(())

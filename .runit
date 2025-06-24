@@ -1,3 +1,1 @@
 #!shell
-cargo build
-# sudo target/debug/runit --file ./tests/4docker

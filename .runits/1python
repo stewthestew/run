@@ -1,2 +1,2 @@
-#!pyp
+#!python
 print("Hello from Python!")

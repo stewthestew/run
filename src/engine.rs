@@ -5,6 +5,10 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+use std::sync::OnceLock;
+
+static SHELL: OnceLock<String> = OnceLock::new();
+
 const SUPPORTED_LANGUAGES: [&str; 4] = ["#!shell", "#!docker", "#!python", "#!ruby"];
 const DEFAULT_MESSAGE: &str = "Expected one of the following:";
 
@@ -156,14 +160,13 @@ pub fn docker(content: &[String]) -> Result<(), io::Error> {
 pub fn launch(first: &str, buffer: &[String], name: &str) -> miette::Result<()> {
     match first {
         "#!shell" | "#!sh" | "#!bash" | "#!bsh" => {
-            let sh = env::var("SHELL").unwrap_or_else(|_| {
-                println!("No shell found, trying to use '/usr/bin/sh' instead");
-                "/usr/bin/sh".to_string()
-            });
-            if let Err(e) = shell(buffer, &sh) {
+            // This is stupid and unnecessary but it is fun
+            let sh = SHELL.get_or_init(|| env::var("SHELL").unwrap_or("/usr/bin/sh".to_string()));
+
+            if let Err(e) = shell(buffer, sh) {
                 eprintln!("Error running shell ERROR({e})");
                 exit(1);
-            };
+            }
         }
         "#!docker" | "#!container" => {
             // I will take the lines after #!docker and put them in a new .Dockerfile
