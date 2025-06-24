@@ -9,6 +9,7 @@ fn isroot() -> bool {
     unsafe { libc::geteuid() == 0 }
 }
 
+#[allow(dead_code)]
 /// Looks at the first character of each string and checks if it is a digit, then it sorts it from
 /// 0 to u32 maximum digit
 fn sort(strings: &mut Vec<String>) {
@@ -124,6 +125,7 @@ pub fn launch(first: &str, buffer: &[String]) {
 }
 
 // Run the runits
+#[allow(dead_code)]
 pub fn runits(root: &str) -> Result<Vec<String>, io::Error> {
     let mut dirs: Vec<String> = Vec::new();
     for entry in walkdir::WalkDir::new(root) {
