@@ -1,5 +1,4 @@
-use console_stuff::clap;
-use console_stuff::prelude::Parser;
+use console_stuff::clap::{Arg, ArgAction, command};
 use miette::{NamedSource, Result};
 use std::{
     fs::{self, File},
@@ -9,23 +8,77 @@ use std::{
 
 mod engine;
 
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
 struct Args {
-    #[arg(short, long, default_value_t = String::from(".runit"))]
+    program_name: String,
     file: String,
-
-    #[arg(short, long, default_value_t = String::from(".runits"))]
     runits: String,
-
-    #[arg(short, long, default_value_t = false)]
     dry_run: bool,
-
-    #[arg(short, long, alias = "ls", default_value_t = false)]
     list: bool,
-
-    #[arg(short, long, default_value_t = String::from("none"))]
     init: String,
+}
+
+impl Args {
+    pub fn parse() -> Self {
+        let args = command!()
+            .arg(
+                Arg::new("file")
+                    .short('f')
+                    .long("file")
+                    .help("Path to the runit file")
+                    .default_value(".runit"),
+            )
+            .arg(
+                Arg::new("runits")
+                    .short('r')
+                    .long("runits")
+                    .help(
+                        "
+The directory that runit will recursively run
+This process is called 'runits'
+Runits runs files based on numeric order
+The lowest number will be run first, highest last
+You can start from any number 01, 0, 100, etc:
+.runits/
+1| 1_unit_tests # runits will run this file first 
+2| 2_setup      # runits will run this file second 
+3| 3_build      # runits will run this file third 
+4| README.md    # Since this file does not start with a number it will be ignored 
+",
+                    )
+                    .default_value(".runits"),
+            )
+            .arg(
+                Arg::new("dry_run")
+                    .short('d')
+                    .long("dry-run")
+                    .help("Prints the commands and files that will be run")
+                    .action(ArgAction::SetTrue),
+            )
+            .arg(
+                Arg::new("list")
+                    .short('l')
+                    .long("list")
+                    .help("List the files that will be run")
+                    .action(ArgAction::SetTrue),
+            )
+            .arg(
+                Arg::new("init")
+                    .short('i')
+                    .long("init")
+                    .help("Initialize a new runit file\n\tChoices: simple, workflow")
+                    .default_value("none"),
+            );
+        let name = args.get_name().to_string();
+        let args = args.get_matches();
+        Args {
+            program_name: name,
+            file: args.get_one::<String>("file").unwrap().to_owned(),
+            runits: args.get_one::<String>("runits").unwrap().to_owned(),
+            dry_run: args.get_flag("dry_run"),
+            list: args.get_flag("list"),
+            init: args.get_one::<String>("init").unwrap().to_owned(),
+        }
+    }
 }
 
 fn main() -> Result<()> {
@@ -124,7 +177,20 @@ fn runits(args: &Args, buffer: &mut Vec<String>) -> miette::Result<()> {
     let files = match engine::get_directories(&args.runits) {
         Ok(f) => f,
         Err(e) => {
-            eprintln!("Error reading {} file ERROR({e})", args.runits);
+            match e.kind() {
+                io::ErrorKind::NotFound => {
+                    eprintln!("No {} file found", args.runits);
+                    eprintln!("Did you forget to create one?");
+                    eprintln!("If not do: {} -r none", args.program_name);
+                }
+                io::ErrorKind::PermissionDenied => {
+                    eprintln!("Permission denied to read {} file", args.file);
+                }
+                _ => {
+                    eprintln!("Unkown error reading {} file ERROR: {e}", args.runits);
+                }
+            }
+
             exit(1);
         }
     };
