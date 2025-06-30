@@ -36,11 +36,6 @@ pub struct LanguageError {
     pub bad_bit: SourceSpan,
 }
 
-// #[derive(Debug, Error, Diagnostic)]
-// #[error("Syntax error")]
-// #[diagnostic(code(Error::Runtime))]
-// struct RuntimeError {}
-
 impl LanguageError {
     fn error(first: &str, name: &str) -> miette::Result<()> {
         match first {
@@ -88,7 +83,6 @@ impl LanguageError {
     }
 }
 
-#[allow(dead_code)]
 /// Looks at the first character of each string and checks if it is a digit, then it sorts it from
 /// 0 to u32 maximum digit
 fn sort(strings: &mut Vec<String>) {
@@ -199,8 +193,6 @@ pub fn launch(first: &str, buffer: &[String], name: &str) -> miette::Result<()> 
     Ok(())
 }
 
-// Run the runits
-#[allow(dead_code)]
 pub fn get_directories(root: &str) -> Result<Vec<String>, io::Error> {
     let mut dirs: Vec<String> = Vec::new();
     for entry in walkdir::WalkDir::new(root) {
