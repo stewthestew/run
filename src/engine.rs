@@ -9,7 +9,7 @@ use std::sync::OnceLock;
 
 static SHELL: OnceLock<String> = OnceLock::new();
 
-const SUPPORTED_LANGUAGES: [&str; 4] = ["#!shell", "#!docker", "#!python", "#!ruby"];
+const SUPPORTED_LANGUAGES: [&str; 6] = ["#!shell", "#!docker", "#!python", "#!py", "#!ruby", "#!rb"];
 const DEFAULT_MESSAGE: &str = "Expected one of the following:";
 
 use miette::{Diagnostic, NamedSource, Result, SourceSpan};
@@ -63,7 +63,7 @@ impl LanguageError {
             // Everything else:
             _ => {
                 for supported in SUPPORTED_LANGUAGES {
-                    if jaro_winkler(first, supported).abs() > 0.8 {
+                    if jaro_winkler(first, supported).abs() > 0.75 {
                         Err(LanguageError {
                             src: NamedSource::new(name, first.to_string()),
                             help: format!("Did you mean? {supported}"),
