@@ -111,7 +111,7 @@ fn sort(strings: &mut Vec<String>) {
 pub fn shell(content: &[String], shell: &str) -> Result<(), io::Error> {
     let script = content.join("\n");
     let temp = format!(
-        "/tmp/runit_{}",
+        "/tmp/run_{}",
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
@@ -137,12 +137,12 @@ pub fn docker(content: &[String]) -> Result<(), io::Error> {
     std::fs::write(temp, script)?;
 
     let build_status = Command::new("sudo")
-        .args(["docker", "build", "-t", "runit-temp", "-f", temp, "."])
+        .args(["docker", "build", "-t", "run-temp", "-f", temp, "."])
         .status()?;
 
     if build_status.success() {
         Command::new("sudo")
-            .args(["docker", "run", "--rm", "runit-temp"])
+            .args(["docker", "run", "--rm", "run-temp"])
             .spawn()?
             .wait()?;
     }

@@ -11,7 +11,7 @@ mod engine;
 struct Args {
     program_name: String,
     file: String,
-    runits: String,
+    runs: String,
     dry_run: bool,
     list: bool,
     init: String,
@@ -24,28 +24,28 @@ impl Args {
                 Arg::new("file")
                     .short('f')
                     .long("file")
-                    .help("Path to the runit file")
-                    .default_value(".runit"),
+                    .help("Path to the run file")
+                    .default_value(".run"),
             )
             .arg(
-                Arg::new("runits")
+                Arg::new("runs")
                     .short('r')
-                    .long("runits")
+                    .long("runs")
                     .help(
                         "
-The directory that runit will recursively run
-This process is called 'runits'
-Runits runs files based on numeric order
+The directory that run will recursively run
+This process is called 'runs'
+Runs runs files based on numeric order
 The lowest number will be run first, highest last
 You can start from any number 01, 0, 100, etc:
-.runits/
-1| 1_unit_tests # runits will run this file first 
-2| 2_setup      # runits will run this file second 
-3| 3_build      # runits will run this file third 
+.runs/
+1| 1_unit_tests # runs will run this file first 
+2| 2_setup      # runs will run this file second 
+3| 3_build      # runs will run this file third 
 4| README.md    # Since this file does not start with a number it will be ignored 
 ",
                     )
-                    .default_value(".runits"),
+                    .default_value(".runs"),
             )
             .arg(
                 Arg::new("dry_run")
@@ -65,7 +65,7 @@ You can start from any number 01, 0, 100, etc:
                 Arg::new("init")
                     .short('i')
                     .long("init")
-                    .help("Initialize a new runit file\n\tChoices: simple, workflow")
+                    .help("Initialize a new run file\n\tChoices: simple, workflow")
                     .default_value("none"),
             );
         let name = args.get_name().to_string();
@@ -73,7 +73,7 @@ You can start from any number 01, 0, 100, etc:
         Args {
             program_name: name,
             file: args.get_one::<String>("file").unwrap().to_owned(),
-            runits: args.get_one::<String>("runits").unwrap().to_owned(),
+            runs: args.get_one::<String>("runs").unwrap().to_owned(),
             dry_run: args.get_flag("dry_run"),
             list: args.get_flag("list"),
             init: args.get_one::<String>("init").unwrap().to_owned(),
@@ -87,14 +87,14 @@ fn main() -> Result<()> {
     match args.init.to_lowercase().as_str() {
         "simple" => {
             if let Err(e) = init(Templates::Simple) {
-                eprintln!("Error creating .runit file ERROR({e})");
+                eprintln!("Error creating .run file ERROR({e})");
                 exit(1);
             };
             exit(0)
         }
         "workflow" => {
             if let Err(e) = init(Templates::Workflow) {
-                eprintln!("Error creating .runit file ERROR({e})");
+                eprintln!("Error creating .run file ERROR({e})");
             };
             exit(0)
         }
@@ -107,13 +107,13 @@ fn main() -> Result<()> {
 
     let mut buffer: Vec<String> = Vec::new();
     start(&args, &mut buffer)?;
-    if args.runits.to_lowercase() != "none" {
-        runits(&args, &mut buffer)?;
+    if args.runs.to_lowercase() != "none" {
+        runs(&args, &mut buffer)?;
     }
     Ok(())
 }
 
-// Start runit
+// Start run
 fn start(args: &Args, buffer: &mut Vec<String>) -> miette::Result<()> {
     let file = match File::open(&args.file) {
         Ok(f) => f,
@@ -173,13 +173,13 @@ fn start(args: &Args, buffer: &mut Vec<String>) -> miette::Result<()> {
     Ok(())
 }
 
-fn runits(args: &Args, buffer: &mut Vec<String>) -> miette::Result<()> {
-    let files = match engine::get_directories(&args.runits) {
+fn runs(args: &Args, buffer: &mut Vec<String>) -> miette::Result<()> {
+    let files = match engine::get_directories(&args.runs) {
         Ok(f) => f,
         Err(e) => {
             match e.kind() {
                 io::ErrorKind::NotFound => {
-                    eprintln!("No {} file found", args.runits);
+                    eprintln!("No {} file found", args.runs);
                     eprintln!("Did you forget to create one?");
                     eprintln!("If not do: {} -r none", args.program_name);
                 }
@@ -187,7 +187,7 @@ fn runits(args: &Args, buffer: &mut Vec<String>) -> miette::Result<()> {
                     eprintln!("Permission denied to read {} file", args.file);
                 }
                 _ => {
-                    eprintln!("Unkown error reading {} file ERROR: {e}", args.runits);
+                    eprintln!("Unkown error reading {} file ERROR: {e}", args.runs);
                 }
             }
 
@@ -196,7 +196,7 @@ fn runits(args: &Args, buffer: &mut Vec<String>) -> miette::Result<()> {
     };
 
     for f in files {
-        let f = format!("{}/{}", args.runits, f);
+        let f = format!("{}/{}", args.runs, f);
         buffer.clear();
         let file = match File::open(&f) {
             Ok(f) => f,
@@ -267,27 +267,27 @@ enum Templates {
 fn init(template: Templates) -> io::Result<()> {
     match template {
         Templates::Simple => {
-            // Make a .runit file
+            // Make a .run file
             // and apend to it the following
             // #!shell
             // echo "Let's run it"
-            let mut file = File::create(".runit")?;
+            let mut file = File::create(".run")?;
             file.write_all(b"#!shell\necho \"simple template\"\n")?;
         }
         Templates::Workflow => {
-            fs::create_dir(".runits")?;
+            fs::create_dir(".runs")?;
 
-            // Create example runits files
-            let mut file1 = File::create(".runits/1_setup")?;
+            // Create example runs files
+            let mut file1 = File::create(".runs/1_setup")?;
             file1.write_all(b"#!shell\necho \"Setting up project...\"\n")?;
 
-            let mut file2 = File::create(".runits/2_build")?;
+            let mut file2 = File::create(".runs/2_build")?;
             file2.write_all(b"#!python\nprint(\"Building project...\")\n")?;
 
-            let mut file3 = File::create(".runits/3_test")?;
+            let mut file3 = File::create(".runs/3_test")?;
             file3.write_all(b"#!shell\necho \"Running tests...\"\n")?;
 
-            let mut file = File::create(".runit")?;
+            let mut file = File::create(".run")?;
             file.write_all(b"#!shell\necho \"workflow template\"\n")?;
         }
     }

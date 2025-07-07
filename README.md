@@ -1,14 +1,14 @@
-# Runit
+# Run
 Run it like no tomorrow.
 
-Runit is a dead simple project running utility.
+Run is a dead simple project running utility.
 
 ## Usage
-First you need to create a `.runit` file in the root of your project.
-The `.runit` file is a simple text file that contains a list of commands and an identifier.
+First you need to create a `.run` file in the root of your project.
+The `.run` file is a simple text file that contains a list of commands and an identifier.
 
 Here is an example:
-```runit
+```run
 #!(identifier_name)
 all code here
 ```
@@ -18,7 +18,7 @@ An identifier is similar to like a shebang if you want to think of it that way.
 
 ### Examples
 Here we are executing a python script
-```runit
+```run
 #!python
 print("Hello world")
 import time
@@ -27,7 +27,7 @@ print("Done!")
 ```
 
 Now we are executing a shell script (Decided by $SHELL environment variable)
-```runit
+```run
 #!shell
 echo "Hello world"
 sleep 5
@@ -35,7 +35,7 @@ echo "Done!"
 ```
 
 You can also run docker containers (Requires sudo)
-```runit
+```run
 #!docker
 FROM alpine:latest
 RUN echo "Hello from Docker!"
@@ -45,14 +45,14 @@ RUN echo "Docker test complete!"
 ```
 
 And you can also run Ruby code too
-```runit
+```run
 #!ruby
 puts "Hello world"
 ```
 
 ## Useful errors
 
-```runit
+```run
 !rubby
 puts "Hello world"
 ```
@@ -71,7 +71,7 @@ Error: Error::Syntax
 
 ## Installation
 ```bash
-git clone https://github.com/stewthestew/runit.git
-cd runit
+git clone https://github.com/stewthestew/run.git
+cd run
 cargo install --path .
 ```
